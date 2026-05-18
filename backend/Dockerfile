@@ -8,7 +8,6 @@ RUN npm install
 COPY tsconfig.json ./
 COPY src ./src
 
-EXPOSE 5000
+EXPOSE 5001
 
 CMD ["npm", "run", "dev"]
-

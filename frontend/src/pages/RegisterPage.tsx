@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { Button, Card, Input, Select } from "../components";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -159,6 +159,12 @@ function RegisterPage() {
             {isLoading ? "Creating account..." : "Register"}
           </Button>
         </form>
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/login">
+            Login
+          </Link>
+        </p>
       </Card>
     </div>
   );

@@ -100,7 +100,7 @@ cd smart-leads-dashboard
 Create `backend/.env` from `backend/.env.example`.
 
 ```env
-PORT=5000
+PORT=5001
 MONGODB_URI=mongodb://localhost:27017/smart-leads-dashboard
 JWT_SECRET=replace-with-a-secure-secret
 ```
@@ -110,7 +110,7 @@ JWT_SECRET=replace-with-a-secure-secret
 Create `frontend/.env` from `frontend/.env.example`.
 
 ```env
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=http://localhost:5001/api
 ```
 
 ## Backend Setup
@@ -124,7 +124,7 @@ npm run dev
 Backend runs on:
 
 ```text
-http://localhost:5000
+http://localhost:5001
 ```
 
 Build backend:
@@ -164,7 +164,7 @@ docker compose up --build
 Services:
 
 - Frontend: `http://localhost:5173`
-- Backend: `http://localhost:5000`
+- Backend: `http://localhost:5001`
 - MongoDB: `localhost:27017`
 
 In Docker, the backend connects to MongoDB using:
@@ -231,4 +231,3 @@ Repository URL: <github-repository-placeholder>
 Suhail Kataria  
 B.Tech AI&DS  
 Chandigarh Group of Colleges, Landran
-

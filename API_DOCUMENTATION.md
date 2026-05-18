@@ -5,13 +5,13 @@
 Local development:
 
 ```text
-http://localhost:5000/api
+http://localhost:5001/api
 ```
 
 Docker backend service:
 
 ```text
-http://localhost:5000/api
+http://localhost:5001/api
 ```
 
 ## Authentication
@@ -444,4 +444,3 @@ Error example: `401 Unauthorized`
   "message": "Invalid authentication token"
 }
 ```
-

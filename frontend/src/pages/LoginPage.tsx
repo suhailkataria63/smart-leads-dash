@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { Button, Card, Input } from "../components";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -120,6 +120,12 @@ function LoginPage() {
             {isLoading ? "Logging in..." : "Login"}
           </Button>
         </form>
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Don&apos;t have an account?{" "}
+          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/register">
+            Register
+          </Link>
+        </p>
       </Card>
     </div>
   );
