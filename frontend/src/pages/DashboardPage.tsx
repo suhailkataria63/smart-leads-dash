@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 import { apiClient } from "../api/client";
 import { Button, Card, EmptyState, ErrorMessage, Input, Loader, Select } from "../components";
+import { RoleBadge } from "../features/auth/RoleBadge";
+import { useAuth } from "../features/auth/useAuth";
 import { LeadForm } from "../features/leads/LeadForm";
 import { getLeadErrorMessage } from "../features/leads/leadMessages";
 import { useDebounce } from "../hooks/useDebounce";
@@ -85,6 +87,7 @@ const downloadCsv = (csv: string, fileName: string): void => {
 };
 
 function DashboardPage() {
+  const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -148,6 +151,7 @@ function DashboardPage() {
   const canGoNext = pagination?.hasNextPage ?? false;
   const hasActiveFilters =
     searchTerm.trim().length > 0 || statusFilter !== "" || sourceFilter !== "" || sort !== "latest";
+  const isAdmin = user?.role === "admin";
 
   const getLeadQueryParams = (page?: number): LeadQueryParams => {
     const params: LeadQueryParams = {
@@ -293,12 +297,31 @@ function DashboardPage() {
     }
   };
 
+  const canManageLead = (lead: Lead): boolean => {
+    if (!user) {
+      return false;
+    }
+
+    return user.role === "admin" || lead.createdBy === user.id;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-950">Leads Dashboard</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold text-slate-950">Leads Dashboard</h1>
+            {user ? <RoleBadge role={user.role} /> : null}
+          </div>
           <p className="mt-1 text-sm text-slate-600">View and track assigned sales leads.</p>
+          {user ? (
+            <p className="mt-1 text-sm text-slate-600">
+              Signed in as {user.name}.{" "}
+              {isAdmin
+                ? "Admin view includes all matching leads."
+                : "Sales view includes your assigned leads only."}
+            </p>
+          ) : null}
         </div>
         {pagination ? (
           <p className="text-sm text-slate-600">
@@ -320,6 +343,12 @@ function DashboardPage() {
       ) : null}
 
       {actionErrorMessage ? <ErrorMessage message={actionErrorMessage} /> : null}
+
+      {isAdmin ? (
+        <div className="rounded-md border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
+          Admin access: you can review and manage all leads returned by the backend.
+        </div>
+      ) : null}
 
       <Card>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_180px_180px_160px_auto] xl:items-end">
@@ -475,24 +504,28 @@ function DashboardPage() {
                         >
                           View
                         </Link>
-                        <button
-                          className="ml-3 font-medium text-slate-700 hover:text-slate-950"
-                          onClick={() => openEditForm(lead)}
-                          type="button"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="ml-3 font-medium text-red-600 hover:text-red-700"
-                          onClick={() => {
-                            setActionErrorMessage(null);
-                            setSuccessMessage(null);
-                            setLeadToDelete(lead);
-                          }}
-                          type="button"
-                        >
-                          Delete
-                        </button>
+                        {canManageLead(lead) ? (
+                          <>
+                            <button
+                              className="ml-3 font-medium text-slate-700 hover:text-slate-950"
+                              onClick={() => openEditForm(lead)}
+                              type="button"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="ml-3 font-medium text-red-600 hover:text-red-700"
+                              onClick={() => {
+                                setActionErrorMessage(null);
+                                setSuccessMessage(null);
+                                setLeadToDelete(lead);
+                              }}
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        ) : null}
                       </td>
                     </tr>
                   ))}

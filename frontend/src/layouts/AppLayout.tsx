@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 
 import { Button } from "../components";
+import { RoleBadge } from "../features/auth/RoleBadge";
 import { useAuth } from "../features/auth/useAuth";
 
 function AppLayout() {
@@ -19,9 +20,10 @@ function AppLayout() {
           <div>
             <p className="text-sm font-medium text-slate-500">Smart Leads Dashboard</p>
             {user ? (
-              <p className="text-sm text-slate-700">
-                {user.name} · {user.role}
-              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-slate-700">{user.name}</span>
+                <RoleBadge role={user.role} />
+              </div>
             ) : null}
           </div>
           <Button onClick={handleLogout} variant="secondary">
