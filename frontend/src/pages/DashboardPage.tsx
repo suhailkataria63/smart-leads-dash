@@ -35,10 +35,10 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 const statusClassNames: Record<Lead["status"], string> = {
-  New: "bg-blue-50 text-blue-700 ring-blue-200",
-  Contacted: "bg-amber-50 text-amber-700 ring-amber-200",
-  Qualified: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  Lost: "bg-red-50 text-red-700 ring-red-200",
+  New: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-800",
+  Contacted: "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800",
+  Qualified: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-800",
+  Lost: "bg-red-50 text-red-700 ring-red-200 dark:bg-red-950 dark:text-red-300 dark:ring-red-800",
 };
 
 type FormMode = "create" | "edit";
@@ -310,12 +310,12 @@ function DashboardPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold text-slate-950">Leads Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-slate-950 dark:text-slate-100">Leads Dashboard</h1>
             {user ? <RoleBadge role={user.role} /> : null}
           </div>
-          <p className="mt-1 text-sm text-slate-600">View and track assigned sales leads.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">View and track assigned sales leads.</p>
           {user ? (
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Signed in as {user.name}.{" "}
               {isAdmin
                 ? "Admin view includes all matching leads."
@@ -324,7 +324,7 @@ function DashboardPage() {
           ) : null}
         </div>
         {pagination ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {pagination.totalItems} {pagination.totalItems === 1 ? "lead" : "leads"}
           </p>
         ) : null}
@@ -337,7 +337,7 @@ function DashboardPage() {
       </div>
 
       {successMessage ? (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
           {successMessage}
         </div>
       ) : null}
@@ -345,7 +345,7 @@ function DashboardPage() {
       {actionErrorMessage ? <ErrorMessage message={actionErrorMessage} /> : null}
 
       {isAdmin ? (
-        <div className="rounded-md border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">
+        <div className="rounded-md border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700 dark:border-purple-900 dark:bg-purple-950 dark:text-purple-300">
           Admin access: you can review and manage all leads returned by the backend.
         </div>
       ) : null}
@@ -389,10 +389,10 @@ function DashboardPage() {
       {formMode ? (
         <Card>
           <div className="mb-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-slate-100">
               {formMode === "edit" ? "Edit lead" : "Create lead"}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {formMode === "edit" ? "Update lead details." : "Add a new lead to the dashboard."}
             </p>
           </div>
@@ -409,8 +409,8 @@ function DashboardPage() {
         <Card>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-950">Delete lead?</h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-slate-100">Delete lead?</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 This will permanently delete {leadToDelete.name}.
               </p>
             </div>
@@ -453,35 +453,35 @@ function DashboardPage() {
           <>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
+                <thead className="bg-slate-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Source
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Created At
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                   {leads.map((lead) => (
-                    <tr className="hover:bg-slate-50" key={lead.id}>
-                      <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-slate-900">
+                    <tr className="hover:bg-slate-50 dark:hover:bg-slate-800" key={lead.id}>
+                      <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {lead.name}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                         {lead.email}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-sm">
@@ -491,15 +491,15 @@ function DashboardPage() {
                           {lead.status}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                         {lead.source}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600 dark:text-slate-300">
                         {formatDate(lead.createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm">
                         <Link
-                          className="font-medium text-blue-600 hover:text-blue-700"
+                          className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                           to={`/leads/${lead.id}`}
                         >
                           View
@@ -507,14 +507,14 @@ function DashboardPage() {
                         {canManageLead(lead) ? (
                           <>
                             <button
-                              className="ml-3 font-medium text-slate-700 hover:text-slate-950"
+                              className="ml-3 font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-slate-100"
                               onClick={() => openEditForm(lead)}
                               type="button"
                             >
                               Edit
                             </button>
                             <button
-                              className="ml-3 font-medium text-red-600 hover:text-red-700"
+                              className="ml-3 font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                               onClick={() => {
                                 setActionErrorMessage(null);
                                 setSuccessMessage(null);
@@ -533,8 +533,8 @@ function DashboardPage() {
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
+            <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Page {pagination?.currentPage ?? currentPage} of {pagination?.totalPages ?? 1}
               </p>
               <div className="flex items-center gap-2">

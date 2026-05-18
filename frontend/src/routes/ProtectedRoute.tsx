@@ -9,7 +9,7 @@ function ProtectedRoute() {
 
   if (isInitializing) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader label="Checking session" />
       </main>
     );
@@ -23,4 +23,3 @@ function ProtectedRoute() {
 }
 
 export { ProtectedRoute };
-

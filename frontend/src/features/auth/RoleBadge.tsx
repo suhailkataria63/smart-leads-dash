@@ -5,8 +5,8 @@ interface RoleBadgeProps {
 }
 
 const roleClassNames: Record<UserRole, string> = {
-  admin: "bg-purple-50 text-purple-700 ring-purple-200",
-  sales: "bg-sky-50 text-sky-700 ring-sky-200",
+  admin: "bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:ring-purple-800",
+  sales: "bg-sky-50 text-sky-700 ring-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:ring-sky-800",
 };
 
 const roleLabels: Record<UserRole, string> = {

@@ -6,6 +6,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { getAuthErrorMessage } from "../features/auth/authErrors";
 import type { UserRole } from "../features/auth/types";
 import { useAuth } from "../features/auth/useAuth";
+import { ThemeToggle } from "../features/theme/ThemeToggle";
 
 interface RegisterFormState {
   name: string;
@@ -99,11 +100,16 @@ function RegisterPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md items-center">
+    <div className="mx-auto flex min-h-screen w-full max-w-md items-center bg-slate-50 px-4 dark:bg-slate-950">
       <Card className="w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-950">Register</h1>
-          <p className="mt-1 text-sm text-slate-600">Create an account to start managing leads.</p>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-950 dark:text-slate-100">Register</h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Create an account to start managing leads.
+            </p>
+          </div>
+          <ThemeToggle />
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           {serverError ? <ErrorMessage message={serverError} /> : null}
@@ -159,9 +165,9 @@ function RegisterPage() {
             {isLoading ? "Creating account..." : "Register"}
           </Button>
         </form>
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           Already have an account?{" "}
-          <Link className="font-medium text-blue-600 hover:text-blue-700" to="/login">
+          <Link className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" to="/login">
             Login
           </Link>
         </p>
