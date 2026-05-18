@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 
 import { apiClient } from "../api/client";
 import { Button, Card, EmptyState, ErrorMessage, Loader } from "../components";
+import { LeadForm } from "../features/leads/LeadForm";
+import { getLeadErrorMessage } from "../features/leads/leadMessages";
 import type { ApiResponse } from "../types/api";
-import type { Lead, LeadsListData } from "../types/lead";
+import type { Lead, LeadMutationData, LeadPayload, LeadsListData } from "../types/lead";
 
 const formatDate = (value: string): string => {
   return new Intl.DateTimeFormat("en", {
@@ -28,12 +30,21 @@ const statusClassNames: Record<Lead["status"], string> = {
   Lost: "bg-red-50 text-red-700 ring-red-200",
 };
 
+type FormMode = "create" | "edit";
+
 function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [pagination, setPagination] = useState<LeadsListData["pagination"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,10 +82,82 @@ function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentPage]);
+  }, [currentPage, refreshKey]);
 
   const canGoPrevious = pagination?.hasPrevPage ?? false;
   const canGoNext = pagination?.hasNextPage ?? false;
+
+  const refreshLeads = () => {
+    setRefreshKey((key) => key + 1);
+  };
+
+  const closeForm = () => {
+    setFormMode(null);
+    setSelectedLead(null);
+  };
+
+  const openCreateForm = () => {
+    setActionErrorMessage(null);
+    setSuccessMessage(null);
+    setSelectedLead(null);
+    setFormMode("create");
+  };
+
+  const openEditForm = (lead: Lead) => {
+    setActionErrorMessage(null);
+    setSuccessMessage(null);
+    setSelectedLead(lead);
+    setFormMode("edit");
+  };
+
+  const handleSubmitLead = async (payload: LeadPayload) => {
+    setIsActionLoading(true);
+    setActionErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      if (formMode === "edit" && selectedLead) {
+        await apiClient.put<ApiResponse<LeadMutationData>>(`/leads/${selectedLead.id}`, payload);
+        setSuccessMessage("Lead updated successfully");
+      } else {
+        await apiClient.post<ApiResponse<LeadMutationData>>("/leads", payload);
+        setSuccessMessage("Lead created successfully");
+      }
+
+      closeForm();
+      refreshLeads();
+    } catch (error) {
+      setActionErrorMessage(getLeadErrorMessage(error));
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    if (!leadToDelete) {
+      return;
+    }
+
+    setIsActionLoading(true);
+    setActionErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      await apiClient.delete(`/leads/${leadToDelete.id}`);
+      setSuccessMessage("Lead deleted successfully");
+      setLeadToDelete(null);
+
+      if (leads.length === 1 && currentPage > 1) {
+        setCurrentPage((page) => page - 1);
+      } else {
+        refreshLeads();
+      }
+    } catch (error) {
+      setActionErrorMessage(getLeadErrorMessage(error));
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -88,7 +171,60 @@ function DashboardPage() {
             {pagination.totalItems} {pagination.totalItems === 1 ? "lead" : "leads"}
           </p>
         ) : null}
+        <Button onClick={openCreateForm}>Create Lead</Button>
       </div>
+
+      {successMessage ? (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      ) : null}
+
+      {actionErrorMessage ? <ErrorMessage message={actionErrorMessage} /> : null}
+
+      {formMode ? (
+        <Card>
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold text-slate-950">
+              {formMode === "edit" ? "Edit lead" : "Create lead"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {formMode === "edit" ? "Update lead details." : "Add a new lead to the dashboard."}
+            </p>
+          </div>
+          <LeadForm
+            initialLead={selectedLead ?? undefined}
+            isSubmitting={isActionLoading}
+            onCancel={closeForm}
+            onSubmit={handleSubmitLead}
+          />
+        </Card>
+      ) : null}
+
+      {leadToDelete ? (
+        <Card>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950">Delete lead?</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                This will permanently delete {leadToDelete.name}.
+              </p>
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button
+                disabled={isActionLoading}
+                onClick={() => setLeadToDelete(null)}
+                variant="secondary"
+              >
+                Cancel
+              </Button>
+              <Button disabled={isActionLoading} onClick={handleDeleteLead} variant="danger">
+                {isActionLoading ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="p-0">
         {isLoading ? (
@@ -158,9 +294,30 @@ function DashboardPage() {
                         {formatDate(lead.createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right text-sm">
-                        <Link className="font-medium text-blue-600 hover:text-blue-700" to={`/leads/${lead.id}`}>
+                        <Link
+                          className="font-medium text-blue-600 hover:text-blue-700"
+                          to={`/leads/${lead.id}`}
+                        >
                           View
                         </Link>
+                        <button
+                          className="ml-3 font-medium text-slate-700 hover:text-slate-950"
+                          onClick={() => openEditForm(lead)}
+                          type="button"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="ml-3 font-medium text-red-600 hover:text-red-700"
+                          onClick={() => {
+                            setActionErrorMessage(null);
+                            setSuccessMessage(null);
+                            setLeadToDelete(lead);
+                          }}
+                          type="button"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}

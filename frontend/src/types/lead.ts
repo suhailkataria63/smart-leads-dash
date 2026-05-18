@@ -18,5 +18,15 @@ interface LeadsListData {
   pagination: PaginationMeta;
 }
 
-export type { Lead, LeadSource, LeadStatus, LeadsListData };
+interface LeadPayload {
+  name: string;
+  email: string;
+  status: LeadStatus;
+  source: LeadSource;
+}
 
+interface LeadMutationData {
+  lead: Lead;
+}
+
+export type { Lead, LeadMutationData, LeadPayload, LeadSource, LeadStatus, LeadsListData };
