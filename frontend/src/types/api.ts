@@ -3,5 +3,14 @@ interface ApiResponse<TData> {
   data: TData;
 }
 
-export type { ApiResponse };
+interface PaginationMeta {
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export type { ApiResponse, PaginationMeta };
 
