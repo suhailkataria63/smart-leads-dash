@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createLead,
   deleteLead,
+  exportLeadsCsv,
   getLeadById,
   getLeads,
   updateLead,
@@ -16,6 +17,7 @@ leadRouter.use(authenticate);
 
 leadRouter.post("/", validateCreateLead, createLead);
 leadRouter.get("/", getLeads);
+leadRouter.get("/export/csv", exportLeadsCsv);
 leadRouter.get("/:id", getLeadById);
 leadRouter.put("/:id", validateUpdateLead, updateLead);
 leadRouter.delete("/:id", deleteLead);

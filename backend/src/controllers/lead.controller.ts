@@ -1,4 +1,6 @@
-import { Types, type FilterQuery } from "mongoose";
+import type { Request } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
+import { Types, type FilterQuery, type SortOrder } from "mongoose";
 
 import {
   Lead,
@@ -11,7 +13,7 @@ import { UserRole } from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-interface LeadIdParams {
+interface LeadIdParams extends ParamsDictionary {
   id: string;
 }
 
@@ -30,8 +32,9 @@ interface UpdateLeadRequestBody {
 }
 
 const LEADS_PAGE_LIMIT = 10;
+type LeadSortOption = "latest" | "oldest";
 
-const getAuthenticatedUser = (req: Express.Request) => {
+const getAuthenticatedUser = (req: Request) => {
   if (!req.user) {
     throw new ApiError(401, "Authentication required");
   }
@@ -39,7 +42,7 @@ const getAuthenticatedUser = (req: Express.Request) => {
   return req.user;
 };
 
-const getLeadAccessFilter = (user: Express.Request["user"]) => {
+const getLeadAccessFilter = (user: Request["user"]) => {
   if (!user) {
     throw new ApiError(401, "Authentication required");
   }
@@ -93,32 +96,11 @@ const parsePage = (value: unknown): number => {
   return page;
 };
 
-const createLead = asyncHandler<CreateLeadRequestBody>(async (req, res) => {
-  const user = getAuthenticatedUser(req);
-  const { name, email, status = LeadStatus.New, source } = req.body;
-
-  const lead = await Lead.create({
-    name,
-    email,
-    status,
-    source,
-    createdBy: user.id,
-  });
-
-  res.status(201).json({
-    success: true,
-    data: {
-      lead: formatLead(lead),
-    },
-  });
-});
-
-const getLeads = asyncHandler(async (req, res) => {
+const getLeadQueryOptions = (req: Request) => {
   const status = getSingleQueryValue(req.query.status);
   const source = getSingleQueryValue(req.query.source);
   const search = getSingleQueryValue(req.query.search);
-  const sort = getSingleQueryValue(req.query.sort) ?? "latest";
-  const currentPage = parsePage(req.query.page);
+  const sort = (getSingleQueryValue(req.query.sort) ?? "latest") as LeadSortOption;
 
   if (status !== undefined && !Object.values(LeadStatus).includes(status as LeadStatus)) {
     throw new ApiError(400, "Status must be New, Contacted, Qualified, or Lost");
@@ -150,8 +132,66 @@ const getLeads = asyncHandler(async (req, res) => {
     filter.$or = [{ name: searchRegex }, { email: searchRegex }];
   }
 
+  const sortOrder: SortOrder = sort === "oldest" ? 1 : -1;
+
+  return {
+    filter,
+    sortOrder,
+  };
+};
+
+const escapeCsvValue = (value: string): string => {
+  if (!/[",\n\r]/.test(value)) {
+    return value;
+  }
+
+  return `"${value.replace(/"/g, '""')}"`;
+};
+
+const formatCsvDate = (date: Date): string => {
+  return date.toISOString();
+};
+
+const buildLeadsCsv = (leads: LeadDocument[]): string => {
+  const headers = ["Name", "Email", "Status", "Source", "Created At"];
+  const rows = leads.map((lead) => [
+    lead.name,
+    lead.email,
+    lead.status,
+    lead.source,
+    formatCsvDate(lead.createdAt),
+  ]);
+
+  return [headers, ...rows]
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\n");
+};
+
+const createLead = asyncHandler<CreateLeadRequestBody>(async (req, res) => {
+  const user = getAuthenticatedUser(req);
+  const { name, email, status = LeadStatus.New, source } = req.body;
+
+  const lead = await Lead.create({
+    name,
+    email,
+    status,
+    source,
+    createdBy: user.id,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: {
+      lead: formatLead(lead),
+    },
+  });
+});
+
+const getLeads = asyncHandler(async (req, res) => {
+  const currentPage = parsePage(req.query.page);
+  const { filter, sortOrder } = getLeadQueryOptions(req);
+
   const skip = (currentPage - 1) * LEADS_PAGE_LIMIT;
-  const sortOrder = sort === "oldest" ? 1 : -1;
 
   const [leads, totalItems] = await Promise.all([
     Lead.find(filter)
@@ -177,6 +217,16 @@ const getLeads = asyncHandler(async (req, res) => {
       },
     },
   });
+});
+
+const exportLeadsCsv = asyncHandler(async (req, res) => {
+  const { filter, sortOrder } = getLeadQueryOptions(req);
+  const leads = await Lead.find(filter).sort({ createdAt: sortOrder });
+  const csv = buildLeadsCsv(leads);
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="leads.csv"');
+  res.status(200).send(csv);
 });
 
 const getLeadById = asyncHandler<unknown, LeadIdParams>(async (req, res) => {
@@ -258,5 +308,5 @@ const deleteLead = asyncHandler<unknown, LeadIdParams>(async (req, res) => {
   });
 });
 
-export { createLead, deleteLead, getLeadById, getLeads, updateLead };
+export { createLead, deleteLead, exportLeadsCsv, getLeadById, getLeads, updateLead };
 export type { CreateLeadRequestBody, UpdateLeadRequestBody };
