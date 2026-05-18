@@ -2,11 +2,20 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { apiClient } from "../api/client";
-import { Button, Card, EmptyState, ErrorMessage, Loader } from "../components";
+import { Button, Card, EmptyState, ErrorMessage, Input, Loader, Select } from "../components";
 import { LeadForm } from "../features/leads/LeadForm";
 import { getLeadErrorMessage } from "../features/leads/leadMessages";
+import { useDebounce } from "../hooks/useDebounce";
 import type { ApiResponse } from "../types/api";
-import type { Lead, LeadMutationData, LeadPayload, LeadsListData } from "../types/lead";
+import type {
+  Lead,
+  LeadMutationData,
+  LeadPayload,
+  LeadSort,
+  LeadSource,
+  LeadStatus,
+  LeadsListData,
+} from "../types/lead";
 
 const formatDate = (value: string): string => {
   return new Intl.DateTimeFormat("en", {
@@ -31,11 +40,45 @@ const statusClassNames: Record<Lead["status"], string> = {
 };
 
 type FormMode = "create" | "edit";
+type StatusFilter = LeadStatus | "";
+type SourceFilter = LeadSource | "";
+
+interface LeadQueryParams {
+  page: number;
+  search?: string;
+  sort: LeadSort;
+  source?: LeadSource;
+  status?: LeadStatus;
+}
+
+const statusOptions: Array<{ label: string; value: StatusFilter }> = [
+  { label: "All statuses", value: "" },
+  { label: "New", value: "New" },
+  { label: "Contacted", value: "Contacted" },
+  { label: "Qualified", value: "Qualified" },
+  { label: "Lost", value: "Lost" },
+];
+
+const sourceOptions: Array<{ label: string; value: SourceFilter }> = [
+  { label: "All sources", value: "" },
+  { label: "Website", value: "Website" },
+  { label: "Instagram", value: "Instagram" },
+  { label: "Referral", value: "Referral" },
+];
+
+const sortOptions: Array<{ label: string; value: LeadSort }> = [
+  { label: "Latest", value: "latest" },
+  { label: "Oldest", value: "oldest" },
+];
 
 function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("");
+  const [sort, setSort] = useState<LeadSort>("latest");
   const [pagination, setPagination] = useState<LeadsListData["pagination"] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,6 +88,7 @@ function DashboardPage() {
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm.trim(), 400);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,8 +98,25 @@ function DashboardPage() {
       setErrorMessage(null);
 
       try {
+        const params: LeadQueryParams = {
+          page: currentPage,
+          sort,
+        };
+
+        if (debouncedSearchTerm) {
+          params.search = debouncedSearchTerm;
+        }
+
+        if (statusFilter) {
+          params.status = statusFilter;
+        }
+
+        if (sourceFilter) {
+          params.source = sourceFilter;
+        }
+
         const response = await apiClient.get<ApiResponse<LeadsListData>>("/leads", {
-          params: { page: currentPage },
+          params,
         });
 
         if (!isMounted) {
@@ -82,10 +143,12 @@ function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentPage, refreshKey]);
+  }, [currentPage, debouncedSearchTerm, refreshKey, sort, sourceFilter, statusFilter]);
 
   const canGoPrevious = pagination?.hasPrevPage ?? false;
   const canGoNext = pagination?.hasNextPage ?? false;
+  const hasActiveFilters =
+    searchTerm.trim().length > 0 || statusFilter !== "" || sourceFilter !== "" || sort !== "latest";
 
   const refreshLeads = () => {
     setRefreshKey((key) => key + 1);
@@ -108,6 +171,34 @@ function DashboardPage() {
     setSuccessMessage(null);
     setSelectedLead(lead);
     setFormMode("edit");
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("");
+    setSourceFilter("");
+    setSort("latest");
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: StatusFilter) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSourceChange = (value: SourceFilter) => {
+    setSourceFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (value: LeadSort) => {
+    setSort(value);
+    setCurrentPage(1);
   };
 
   const handleSubmitLead = async (payload: LeadPayload) => {
@@ -181,6 +272,42 @@ function DashboardPage() {
       ) : null}
 
       {actionErrorMessage ? <ErrorMessage message={actionErrorMessage} /> : null}
+
+      <Card>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_180px_180px_160px_auto] xl:items-end">
+          <Input
+            label="Search"
+            name="search"
+            onChange={(event) => handleSearchChange(event.target.value)}
+            placeholder="Search name or email"
+            value={searchTerm}
+          />
+          <Select
+            label="Status"
+            name="status"
+            onChange={(event) => handleStatusChange(event.target.value as StatusFilter)}
+            options={statusOptions}
+            value={statusFilter}
+          />
+          <Select
+            label="Source"
+            name="source"
+            onChange={(event) => handleSourceChange(event.target.value as SourceFilter)}
+            options={sourceOptions}
+            value={sourceFilter}
+          />
+          <Select
+            label="Sort"
+            name="sort"
+            onChange={(event) => handleSortChange(event.target.value as LeadSort)}
+            options={sortOptions}
+            value={sort}
+          />
+          <Button disabled={!hasActiveFilters} onClick={resetFilters} variant="secondary">
+            Reset
+          </Button>
+        </div>
+      </Card>
 
       {formMode ? (
         <Card>

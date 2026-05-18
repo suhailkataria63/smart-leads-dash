@@ -2,6 +2,7 @@ import type { PaginationMeta } from "./api";
 
 type LeadStatus = "New" | "Contacted" | "Qualified" | "Lost";
 type LeadSource = "Website" | "Instagram" | "Referral";
+type LeadSort = "latest" | "oldest";
 
 interface Lead {
   id: string;
@@ -29,4 +30,12 @@ interface LeadMutationData {
   lead: Lead;
 }
 
-export type { Lead, LeadMutationData, LeadPayload, LeadSource, LeadStatus, LeadsListData };
+export type {
+  Lead,
+  LeadMutationData,
+  LeadPayload,
+  LeadSort,
+  LeadSource,
+  LeadStatus,
+  LeadsListData,
+};
