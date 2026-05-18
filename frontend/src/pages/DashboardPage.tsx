@@ -44,7 +44,7 @@ type StatusFilter = LeadStatus | "";
 type SourceFilter = LeadSource | "";
 
 interface LeadQueryParams {
-  page: number;
+  page?: number;
   search?: string;
   sort: LeadSort;
   source?: LeadSource;
@@ -71,6 +71,19 @@ const sortOptions: Array<{ label: string; value: LeadSort }> = [
   { label: "Oldest", value: "oldest" },
 ];
 
+const downloadCsv = (csv: string, fileName: string): void => {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +98,7 @@ function DashboardPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [actionErrorMessage, setActionErrorMessage] = useState<string | null>(null);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
@@ -98,22 +112,7 @@ function DashboardPage() {
       setErrorMessage(null);
 
       try {
-        const params: LeadQueryParams = {
-          page: currentPage,
-          sort,
-        };
-
-        if (debouncedSearchTerm) {
-          params.search = debouncedSearchTerm;
-        }
-
-        if (statusFilter) {
-          params.status = statusFilter;
-        }
-
-        if (sourceFilter) {
-          params.source = sourceFilter;
-        }
+        const params = getLeadQueryParams(currentPage);
 
         const response = await apiClient.get<ApiResponse<LeadsListData>>("/leads", {
           params,
@@ -149,6 +148,30 @@ function DashboardPage() {
   const canGoNext = pagination?.hasNextPage ?? false;
   const hasActiveFilters =
     searchTerm.trim().length > 0 || statusFilter !== "" || sourceFilter !== "" || sort !== "latest";
+
+  const getLeadQueryParams = (page?: number): LeadQueryParams => {
+    const params: LeadQueryParams = {
+      sort,
+    };
+
+    if (page !== undefined) {
+      params.page = page;
+    }
+
+    if (debouncedSearchTerm) {
+      params.search = debouncedSearchTerm;
+    }
+
+    if (statusFilter) {
+      params.status = statusFilter;
+    }
+
+    if (sourceFilter) {
+      params.source = sourceFilter;
+    }
+
+    return params;
+  };
 
   const refreshLeads = () => {
     setRefreshKey((key) => key + 1);
@@ -250,6 +273,26 @@ function DashboardPage() {
     }
   };
 
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    setActionErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await apiClient.get<string>("/leads/export/csv", {
+        params: getLeadQueryParams(),
+        responseType: "text",
+      });
+
+      downloadCsv(response.data, "leads.csv");
+      setSuccessMessage("CSV export downloaded");
+    } catch (error) {
+      setActionErrorMessage(getLeadErrorMessage(error));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -262,7 +305,12 @@ function DashboardPage() {
             {pagination.totalItems} {pagination.totalItems === 1 ? "lead" : "leads"}
           </p>
         ) : null}
-        <Button onClick={openCreateForm}>Create Lead</Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button disabled={isExporting} onClick={handleExportCsv} variant="secondary">
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+          <Button onClick={openCreateForm}>Create Lead</Button>
+        </div>
       </div>
 
       {successMessage ? (
