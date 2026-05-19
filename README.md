@@ -1,12 +1,12 @@
 # GigFlow - Smart Leads Dashboard
 
-GigFlow – Smart Leads Dashboard is a full-stack lead management application built for the final assignment submission. It allows authenticated users to create, view, update, filter, search, sort, paginate, and export sales leads, with role-based access for Admin and Sales users.
+GigFlow - Smart Leads Dashboard is a full-stack lead management application built for the final assignment submission. It allows authenticated users to create, view, update, filter, search, sort, paginate, and export sales leads, with role-based access for Admin and Sales users.
 
 ## Live Deployment
 
-- Frontend: https://smart-leads-dash.vercel.app
-- Backend API: https://smart-leads-dash.onrender.com
-- Backend health check: https://smart-leads-dash.onrender.com/api/health
+- Frontend: https://smart-leads-dash.vercel.app/
+- Backend API Base URL: https://smart-leads-dash.onrender.com
+- Backend Health Check: https://smart-leads-dash.onrender.com/api/health
 
 ## Tech Stack
 
@@ -24,8 +24,8 @@ GigFlow – Smart Leads Dashboard is a full-stack lead management application bu
 - Node.js
 - Express.js
 - TypeScript
-- MongoDB Atlas
 - Mongoose
+- MongoDB Atlas
 - JWT authentication
 - bcrypt password hashing
 
@@ -35,6 +35,19 @@ GigFlow – Smart Leads Dashboard is a full-stack lead management application bu
 - Backend hosted on Render
 - MongoDB Atlas database
 - Docker and Docker Compose for local containerized setup
+
+## Database Information
+
+The deployed application uses MongoDB Atlas as the cloud database. Mongoose is used for schema modeling, validation, and database operations.
+
+Main collections:
+
+- `users`: stores registered user data, including hashed passwords and user roles.
+- `leads`: stores lead records with `name`, `email`, `status`, `source`, `createdAt`, and `createdBy`.
+
+Each lead has a `createdBy` field that links the lead to the user who created it. This relationship is used for role-based access, where Admin users can view all leads and Sales users can view only their own leads.
+
+For local development, the backend can connect to either a local MongoDB instance or MongoDB Atlas through `MONGODB_URI`.
 
 ## Core Features
 
@@ -167,9 +180,9 @@ smart-leads-dashboard/
 
 ## Environment Variables
 
-Environment files are intentionally not committed. Use the provided `.env.example` files as references and create local `.env` files as needed.
+Environment files are intentionally not committed. Use the provided `.env.example` files as references and create local `.env` files as needed. Real secrets are managed through local `.env` files and deployment platform environment variables.
 
-### Backend
+### Backend Local `.env`
 
 Create `backend/.env`:
 
@@ -183,7 +196,7 @@ NODE_ENV=development
 
 For local MongoDB, `MONGODB_URI` can point to a local MongoDB instance. For production, it should point to MongoDB Atlas.
 
-### Frontend
+### Frontend Local `.env`
 
 Create `frontend/.env` for local development:
 
@@ -191,10 +204,19 @@ Create `frontend/.env` for local development:
 VITE_API_BASE_URL=http://localhost:5001/api
 ```
 
-For the deployed frontend on Vercel:
+### Frontend Deployed Environment
 
 ```env
 VITE_API_BASE_URL=https://smart-leads-dash.onrender.com/api
+```
+
+### Backend Deployed Environment on Render
+
+```env
+MONGODB_URI=<mongodb_atlas_connection_string>
+JWT_SECRET=<your_jwt_secret>
+JWT_EXPIRES_IN=7d
+NODE_ENV=production
 ```
 
 ## Backend Setup
@@ -286,11 +308,30 @@ The API documentation includes:
 - Request and response examples
 - Error response format
 
+## Backend API Testing Note
+
+The backend is an API-only Express server. A `GET /` route is not implemented, so opening the root backend URL directly may show:
+
+```text
+Cannot GET /
+```
+
+This is expected and does not mean the backend deployment is broken.
+
+Use actual API endpoints to test the backend, such as:
+
+- `GET https://smart-leads-dash.onrender.com/api/health`
+- `POST https://smart-leads-dash.onrender.com/api/auth/register`
+- `POST https://smart-leads-dash.onrender.com/api/auth/login`
+- Lead routes through the deployed frontend, Thunder Client, Postman, or curl
+
 ## Deployment Information
 
 - Frontend is deployed on Vercel.
 - Backend API is deployed on Render.
 - Database is hosted on MongoDB Atlas.
+- Render stores backend environment variables such as `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, and `NODE_ENV`.
+- Vercel stores the frontend `VITE_API_BASE_URL` environment variable.
 - The deployed frontend uses the Render backend API URL:
 
 ```env
@@ -302,6 +343,7 @@ VITE_API_BASE_URL=https://smart-leads-dash.onrender.com/api
 
 - `.env` files are not committed to the repository.
 - `backend/.env.example` and `frontend/.env.example` are provided as setup references.
+- Real secrets are managed through local `.env` files and deployment platform environment variables.
 - No real secrets, passwords, or production credentials should be committed.
 - `API_DOCUMENTATION.md` contains the detailed backend API reference.
 
