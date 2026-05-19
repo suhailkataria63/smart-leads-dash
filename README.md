@@ -350,6 +350,6 @@ VITE_API_BASE_URL=https://smart-leads-dash.onrender.com/api
 ## Author
 
 Suhail Kataria  
-suhail.kataria@gmail.com
+suhail.kataria63@gmail.com
 B.Tech AI&DS  
 Chandigarh Group of Colleges, Landran
