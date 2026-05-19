@@ -3,6 +3,14 @@ import type { PaginationMeta } from "./api";
 type LeadStatus = "New" | "Contacted" | "Qualified" | "Lost";
 type LeadSource = "Website" | "Instagram" | "Referral";
 type LeadSort = "latest" | "oldest";
+type LeadCreatorRole = "admin" | "sales";
+
+interface LeadCreator {
+  id: string;
+  name: string;
+  email: string;
+  role: LeadCreatorRole;
+}
 
 interface Lead {
   id: string;
@@ -10,7 +18,7 @@ interface Lead {
   email: string;
   status: LeadStatus;
   source: LeadSource;
-  createdBy: string;
+  createdBy: LeadCreator | string;
   createdAt: string;
 }
 
@@ -32,6 +40,7 @@ interface LeadMutationData {
 
 export type {
   Lead,
+  LeadCreator,
   LeadMutationData,
   LeadPayload,
   LeadSort,

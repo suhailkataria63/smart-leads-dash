@@ -64,6 +64,30 @@ const formatLead = (lead: LeadDocument) => ({
   createdAt: lead.createdAt,
 });
 
+const formatLeadWithCreator = (lead: LeadDocument) => {
+  const populatedCreatedBy = lead.populated("createdBy") ? lead.createdBy : null;
+
+  if (
+    populatedCreatedBy &&
+    typeof populatedCreatedBy === "object" &&
+    "name" in populatedCreatedBy &&
+    "email" in populatedCreatedBy &&
+    "role" in populatedCreatedBy
+  ) {
+    return {
+      ...formatLead(lead),
+      createdBy: {
+        id: populatedCreatedBy._id.toString(),
+        name: String(populatedCreatedBy.name),
+        email: String(populatedCreatedBy.email),
+        role: String(populatedCreatedBy.role),
+      },
+    };
+  }
+
+  return formatLead(lead);
+};
+
 const getSingleQueryValue = (value: unknown): string | undefined => {
   if (typeof value === "string") {
     return value;
@@ -239,7 +263,7 @@ const getLeadById = asyncHandler<unknown, LeadIdParams>(async (req, res) => {
   const lead = await Lead.findOne({
     _id: id,
     ...getLeadAccessFilter(req.user),
-  });
+  }).populate("createdBy", "name email role");
 
   if (!lead) {
     throw new ApiError(404, "Lead not found");
@@ -248,7 +272,7 @@ const getLeadById = asyncHandler<unknown, LeadIdParams>(async (req, res) => {
   res.status(200).json({
     success: true,
     data: {
-      lead: formatLead(lead),
+      lead: formatLeadWithCreator(lead),
     },
   });
 });
