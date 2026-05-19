@@ -1,4 +1,4 @@
-# GigFlow – Smart Leads Dashboard
+# GigFlow - Smart Leads Dashboard
 
 GigFlow – Smart Leads Dashboard is a full-stack lead management application built for the final assignment submission. It allows authenticated users to create, view, update, filter, search, sort, paginate, and export sales leads, with role-based access for Admin and Sales users.
 
@@ -297,20 +297,6 @@ The API documentation includes:
 VITE_API_BASE_URL=https://smart-leads-dash.onrender.com/api
 ```
 
-## Testing and Demo Workflow
-
-Recommended demo flow:
-
-1. Open the deployed frontend.
-2. Register a Sales user and create a few leads.
-3. Register or log in as an Admin user.
-4. Confirm Admin can view all leads.
-5. Confirm Sales user can view only their own leads.
-6. Test lead create, edit, view, and delete flows.
-7. Test search, status filter, source filter, sort, and pagination.
-8. Export CSV and confirm the exported data matches the active filters.
-9. Toggle dark mode and refresh to confirm the theme persists.
-10. Open the health check URL to confirm the backend is running.
 
 ## Repository Notes
 
@@ -322,5 +308,6 @@ Recommended demo flow:
 ## Author
 
 Suhail Kataria  
+suhail.kataria@gmail.com
 B.Tech AI&DS  
 Chandigarh Group of Colleges, Landran
